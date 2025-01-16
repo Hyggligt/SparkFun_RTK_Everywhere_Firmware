@@ -1243,14 +1243,15 @@
                             </div>
                         </div>
 
-                        <div class="form-check mt-3">
-                            <label class="form-check-label" for="requestKeyUpdate">Request Key Update </label>
-                            <input class="form-check-input" type="checkbox" value="" id="requestKeyUpdate">
-                            <span class="tt" data-bs-placement="right"
-                                title="When checked, the PointPerfect keys will be requested and updated at the next opportunity. Default: Disabled">
-                                <span class="icon-info-circle text-primary ms-2"></span>
-                            </span>
-                        </div>
+                        <button type="button" id="btnKeyUpdate" class="btn btn-primary"
+                            onClick="updatePointPerfectKeys()">Update Keys</button>
+
+                        <span class="tt" data-bs-placement="right"
+                            title="Use WiFi to update Point Perfect keys.">
+                            <span class="icon-info-circle text-primary ms-2"></span>
+                        </span>
+                        <p id="updateKeysMsg"></p>
+
 
                         <div id="useAssistNowCheckbox">
                             <div class="form-check mt-3">

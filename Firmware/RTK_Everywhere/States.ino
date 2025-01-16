@@ -523,6 +523,18 @@ void stateUpdate()
                     otaReportedVersion[0] = '\0'; // Zero out the reported version
                 }
 
+                // If a key update was requested, report the state machine status back to the web page
+                if (settings.requestKeyUpdate == true)
+                {
+                    createFirmwareVersionString(settingsCSV);
+
+                    if (settings.debugWebServer)
+                        systemPrintf("WebServer: Key update requested. Sending: %s\r\n", settingsCSV);
+
+                    sendStringToWebsocket(settingsCSV);
+
+                    otaReportedVersion[0] = '\0'; // Zero out the reported version
+                }                
             }
 
 #endif // COMPILE_AP

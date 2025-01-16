@@ -1206,6 +1206,44 @@ void provisioningSetState(uint8_t newState)
     }
 }
 
+// Report back to the web config page with a CSV that contains the 
+// status of the provisioning state machine 
+void createKeyUpdateString(char *settingsCSV)
+{
+    char updateCSV[100];
+
+    settingsCSV[0] = '\0'; // Erase current settings string
+
+    if(provisioningState == PROVISIONING_WAIT_FOR_NETWORK)
+    {
+        snprintf(updateCSV, sizeof(updateCSV), "%s,", "Waiting for network");
+    }
+
+
+    // Create a string of the unit's current firmware version
+    char currentVersion[21];
+    getFirmwareVersion(currentVersion, sizeof(currentVersion), enableRCFirmware);
+
+    // Compare the unit's version against the reported version from OTA
+    if (isReportedVersionNewer(otaReportedVersion, currentVersion) == true)
+    {
+        if (settings.debugWebServer == true)
+            systemPrintln("New version detected");
+        snprintf(updateCSV, sizeof(updateCSV), "%s,", otaReportedVersion);
+    }
+    else
+    {
+        if (settings.debugWebServer == true)
+            systemPrintln("No new firmware available");
+        snprintf(updateCSV, sizeof(updateCSV), "CURRENT,");
+    }
+
+    stringRecord(settingsCSV, "keyUpdateStatus", updateCSV);
+
+    strcat(settingsCSV, "\0");
+}
+
+
 unsigned long provisioningStartTime_millis;
 const unsigned long provisioningTimeout_ms = 120000;
 

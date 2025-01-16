@@ -1283,6 +1283,69 @@ SettingValueResponse updateSettingWithValue(bool inCommands, const char *setting
         }
         knownSetting = true;
     }
+    else if (strcmp(settingName, "updatePpKeys") == 0)
+    {
+        if (settings.debugWebServer == true)
+            systemPrintln("Checking for new PointPerfect Keys");
+
+        sendStringToWebsocket((char *)"updatingKeys,1,"); // Tell the config page we received their request
+
+        updatePpKeys
+
+        // We don't use the Provisioning state machine here because we need to respond to
+        // Web Config immediately of success or failure
+
+        // If we're in AP only mode (no internet), try WiFi with current SSIDs
+        if (networkIsInterfaceStarted(NETWORK_WIFI) && networkHasInternet() == false)
+        {
+            wifiStart();
+        }
+
+        // Get firmware version from server
+        char responseCSV[40];
+        if (networkHasInternet() == false)
+        {
+            // No internet. Report error.
+            if (settings.debugWebServer == true)
+                systemPrintln("No internet available. Sending error to Web config page.");
+            snprintf(responseCSV, sizeof(responseCSV), "newPpKeys,NO_INTERNET,");
+        }
+        else
+        {
+
+
+            char otaReportedVersion[50];
+            if (otaCheckVersion(otaReportedVersion, sizeof(otaReportedVersion)))
+            {
+                // We got a version number, now determine if it's newer or not
+                char currentVersion[40];
+                getFirmwareVersion(currentVersion, sizeof(currentVersion), enableRCFirmware);
+                if (isReportedVersionNewer(otaReportedVersion, currentVersion) == true)
+                {
+                    if (settings.debugWebServer == true)
+                        systemPrintln("New version detected");
+                    snprintf(responseCSV, sizeof(responseCSV), "newPpKeys,%s,", otaReportedVersion);
+                }
+                else
+                {
+                    if (settings.debugWebServer == true)
+                        systemPrintln("No new firmware available");
+                    snprintf(responseCSV, sizeof(responseCSV), "newPpKeys,UPDATED,");
+                }
+            }
+            else
+            {
+                // Failed to get version number
+                if (settings.debugWebServer == true)
+                    systemPrintln("Sending error to Web config page");
+                snprintf(responseCSV, sizeof(responseCSV), "newPpKeys,NO_SERVER,");
+            }
+        }
+
+        sendStringToWebsocket(responseCSV);
+
+        knownSetting = true;
+    }
     else if (strcmp(settingName, "checkNewFirmware") == 0)
     {
         if (settings.debugWebServer == true)
@@ -1341,7 +1404,7 @@ SettingValueResponse updateSettingWithValue(bool inCommands, const char *setting
         sendStringToWebsocket(newVersionCSV);
 
         knownSetting = true;
-    }
+    }    
     else if (strcmp(settingName, "getNewFirmware") == 0)
     {
         if (settings.debugWebServer == true)

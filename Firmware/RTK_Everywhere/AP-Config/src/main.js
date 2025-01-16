@@ -52,6 +52,7 @@ var fullPageUpdate = false;
 
 var resetTimeout;
 var sendDataTimeout;
+var updateKeysTimeout;
 var checkNewFirmwareTimeout;
 var getNewFirmwareTimeout;
 
@@ -311,6 +312,9 @@ function parseIncoming(msg) {
         else if (id.includes("confirmDataReceipt")) {
             confirmDataReceipt();
         }
+        else if (id.includes("keysUpdated")) {
+            confirmKeysUpdated();
+        }
 
         else if (id.includes("profileNumber")) {
             currentProfileNumber = val;
@@ -476,6 +480,12 @@ function parseIncoming(msg) {
             else
                 console.log("Too many corrections sources");
         }
+        else if (id.includes("updatingKeys")) {
+            updatingKeys();
+        }
+        else if (id.includes("newPpKeys")) {
+            newPpKeys(val);
+        }
         else if (id.includes("checkingNewFirmware")) {
             checkingNewFirmware();
         }
@@ -529,7 +539,7 @@ function parseIncoming(msg) {
         else if (id.includes("antennaHeight_mm")) {
             ge("antennaHeight_m").value = val / 1000.0;
         }
-            
+
         //Check boxes / radio buttons
         else if (val == "true") {
             try {
@@ -2318,6 +2328,69 @@ function networkCount() {
 
     return (count);
 }
+
+function updatePointPerfectKeys() {
+    if ((platformPrefix != "EVK") && (networkCount() == 0)) {
+        showMsgError('updateKeysMsg', "WiFi list is empty");
+        return;
+    }
+
+    ge("btnKeyUpdate").disabled = true;
+    showMsg('updateKeysMsg', "Connecting to network", false);
+
+    var settingCSV = "";
+
+    //Send current WiFi SSID and PWs
+    var clsElements = document.querySelectorAll('input[id^=wifiNetwork]');
+    for (let x = 0; x < clsElements.length; x++) {
+        settingCSV += clsElements[x].id + "," + clsElements[x].value + ",";
+    }
+
+    settingCSV += "updatePpKeys,1,";
+
+    console.log("Firmware sending: " + settingCSV);
+    websocket.send(settingCSV);
+
+    updateKeysTimeout = setTimeout(updatePointPerfectKeys, 2000);
+}
+
+function updatingKeys() {
+    clearTimeout(updateKeysTimeout);
+    console.log("Clearing timeout for updateKeysTimeout");
+
+    showMsg('updateKeysMsg', "Requesting keys");
+}
+
+function newPpKeys(keys) {
+    clearMsg('updateKeysMsg');
+    if (key == "NO_INTERNET") {
+        showMsgError('updateKeysMsg', "No internet");
+        hide("divGetNewFirmware");
+        ge("btnCheckNewFirmware").disabled = false;
+        return;
+    }
+    else if (firmwareVersion == "NO_SERVER") {
+        showMsgError('updateKeysMsg', "Network or Server not available");
+        hide("divGetNewFirmware");
+        ge("btnCheckNewFirmware").disabled = false;
+        return;
+    }
+    else if (firmwareVersion == "UPDATED") {
+        showMsg('updateKeysMsg', "Keys updated");
+        hide("divGetNewFirmware");
+        ge("btnCheckNewFirmware").disabled = false;
+
+        //TODO update the days until expired
+        return;
+    }
+
+    ge("btnGetNewFirmware").innerHTML = "Update to v" + firmwareVersion;
+    ge("btnGetNewFirmware").disabled = false;
+    ge("firmwareUpdateProgressBar").value = 0;
+    clearMsg('firmwareUpdateProgressMsg');
+    show("divGetNewFirmware");
+}
+
 
 function checkNewFirmware() {
     if ((platformPrefix != "EVK") && (networkCount() == 0)) {
