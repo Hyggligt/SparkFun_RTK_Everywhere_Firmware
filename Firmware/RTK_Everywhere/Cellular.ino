@@ -14,7 +14,7 @@
 
 #define CELLULAR_MODEM_MODEL PPP_MODEM_GENERIC
 
-#define CELLULAR_MODEM_APN "internet"
+#define CELLULAR_MODEM_APN "internet.ts.m2m"
 #define CELLULAR_MODEM_PIN NULL // Personal Identification Number: String in double quotes
 
 #define CELLULAR_BOOT_DELAY DELAY_SEC(15) // Delay after boot before starting cellular
